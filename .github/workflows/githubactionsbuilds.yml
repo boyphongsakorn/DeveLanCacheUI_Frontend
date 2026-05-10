@@ -66,13 +66,13 @@ jobs:
           PR_BRANCH=$(echo "${{ github.event.workflow_run.head_branch }}" | sed 's/\//-/g')
           echo "PR_USERNAME: $PR_USERNAME"
           echo "PR_BRANCH: $PR_BRANCH"
-          TAGS="-t devedse/develancacheui_frontend:pr_${PR_USERNAME}_${PR_BRANCH}"
+          TAGS="-t boyphongsakorn/develancacheui_frontend:pr_${PR_USERNAME}_${PR_BRANCH}"
         elif [[ "${{ github.ref }}" == 'refs/heads/master' ]]; then
-          TAGS="-t devedse/develancacheui_frontend:${VERSION} -t devedse/develancacheui_frontend:latest -t devedse/develancacheui_frontend:beta_nightly"
+          TAGS="-t boyphongsakorn/develancacheui_frontend:${VERSION} -t boyphongsakorn/develancacheui_frontend:latest -t boyphongsakorn/develancacheui_frontend:beta_nightly"
         elif [[ "${{ github.actor }}" == 'dependabot[bot]' ]]; then
-          TAGS="-t devedse/develancacheui_frontend:beta_${BRANCH_NAME}"
+          TAGS="-t boyphongsakorn/develancacheui_frontend:beta_${BRANCH_NAME}"
         else 
-          TAGS="-t devedse/develancacheui_frontend:beta_${BRANCH_NAME} -t devedse/develancacheui_frontend:beta_nightly"
+          TAGS="-t boyphongsakorn/develancacheui_frontend:beta_${BRANCH_NAME} -t boyphongsakorn/develancacheui_frontend:beta_nightly"
         fi
 
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
