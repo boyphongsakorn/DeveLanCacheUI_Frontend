@@ -53,7 +53,7 @@
             var downloadIdentifierString = downloadEvent.DownloadIdentifierString;
             var appHref = appId != 0 ? $"https://steamdb.info/app/{appId}/" : "";
             var depotHref = downloadIdentifierString != null && downloadEvent.CacheIdentifier == "steam" ? $"https://steamdb.info/depot/{downloadIdentifierString}/" : null;
-            var imgUrl = appId != 0 ? $"https://img.gs/fhcphvsghs/quality=low/https://steam-header-proxy.vercel.app/header?appid={appId}" : "";
+            var imgUrl = appId != 0 ? $"https://img.gs/fhcphvsghs/quality=low/https://steam-header-proxy.vercel.app/header?appid={appId}" : https://placehold.co/460x75?text=downloadIdentifierString;
             <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
                 <td>
                     @downloadEvent.CacheIdentifier
