@@ -24,30 +24,62 @@
     }
 </h1>
 
-<table id="clientStats" class="table">
+@{
+    var clientTotalHit = clientDownloadStats.Sum(t => t.TotalCacheHitBytes);
+    var clientTotalMiss = clientDownloadStats.Sum(t => t.TotalCacheMissBytes);
+    var clientGrandTotal = clientTotalHit + clientTotalMiss;
+    var serviceTotalHit = serviceDownloadStats.Sum(t => t.TotalCacheHitBytes);
+    var serviceTotalMiss = serviceDownloadStats.Sum(t => t.TotalCacheMissBytes);
+    var serviceGrandTotal = serviceTotalHit + serviceTotalMiss;
+    var overallHitRate = clientGrandTotal != 0 ? Math.Round(((double)clientTotalHit / clientGrandTotal) * 100, 2) : 0.0;
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <div class="text-uppercase small text-body-secondary">Total Cache Hit</div>
+                <div class="fs-3 fw-bold text-success">@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(clientTotalHit)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <div class="text-uppercase small text-body-secondary">Total Cache Miss</div>
+                <div class="fs-3 fw-bold text-danger">@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(clientTotalMiss)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <div class="text-uppercase small text-body-secondary">Overall Cache Hit Rate</div>
+                <div class="fs-3 fw-bold">@overallHitRate%</div>
+                <progress class="stat-hit" max="100" value="@(overallHitRate.ToString(CultureInfo.InvariantCulture))"></progress>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table id="clientStats" class="table table-hover align-middle">
     <thead>
         <tr>
             <th>Client IP</th>
-            <th>Total Cache Hit Bytes</th>
-            <th>Total Cache Miss Bytes</th>
+            <th class="text-end">Total Cache Hit</th>
+            <th class="text-end">Total Cache Miss</th>
+            <th class="text-end">Cache Hit Rate</th>
         </tr>
     </thead>
     <tbody>
         @{
-            var totalMissService = clientDownloadStats.Sum(t => t.TotalCacheMissBytes);
-            var totalHitService = clientDownloadStats.Sum(t => t.TotalCacheHitBytes);
-            var uberTotalSerivce = totalMissService + totalHitService;
             foreach (var stats in clientDownloadStats.OrderByDescending(t => t.TotalCacheHitBytes))
             {
-                double cacheHitPercent = 0.0;
-                double cacheMissPercent = 0.0;
-                if ((stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0)
-                {
-                    cacheHitPercent = Math.Round(((double)stats.TotalCacheHitBytes / (uberTotalSerivce)) * 100, 2);
-                    cacheMissPercent = Math.Round(((double)stats.TotalCacheMissBytes / (uberTotalSerivce)) * 100, 2);
-                }
+                double hitShare = clientGrandTotal != 0 ? Math.Round(((double)stats.TotalCacheHitBytes / clientGrandTotal) * 100, 2) : 0.0;
+                double missShare = clientGrandTotal != 0 ? Math.Round(((double)stats.TotalCacheMissBytes / clientGrandTotal) * 100, 2) : 0.0;
+                double hitRate = (stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0 ? Math.Round(((double)stats.TotalCacheHitBytes / (stats.TotalCacheMissBytes + stats.TotalCacheHitBytes)) * 100, 2) : 0.0;
                 <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
-                    <td>
+                    <td class="text-nowrap">
                         @if (backendBaseUrl != null && _localStorage.GetItem<bool>(LocalStorageField.HashImagesEnabled))
                         {
                             <div>@stats.Identifier</div>
@@ -58,63 +90,68 @@
                             @stats.Identifier
                         }
                     </td>
-                    <td>
-                        <progress max="100" value="@(cacheHitPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({cacheHitPercent}%)")
+                    <td class="text-end text-nowrap">
+                        <progress class="stat-hit" max="100" value="@(hitShare.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <span class="text-success">@($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({hitShare}%)")</span>
                     </td>
-                    <td>
-                        <progress max="100" value="@(cacheMissPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({cacheMissPercent}%)")
+                    <td class="text-end text-nowrap">
+                        <progress class="stat-miss" max="100" value="@(missShare.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <span class="text-danger">@($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({missShare}%)")</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <progress class="stat-hit" max="100" value="@(hitRate.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <span>@hitRate%</span>
                     </td>
                 </tr>
             }
-            <tr>
+            <tr class="fw-bold">
                 <td>Total</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalHitService)</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalMissService)</td>
+                <td class="text-end">@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(clientTotalHit)</td>
+                <td class="text-end">@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(clientTotalMiss)</td>
+                <td class="text-end">@overallHitRate%</td>
             </tr>
         }
     </tbody>
 </table>
 <h2 id="service-download-stats">Service Download Stats</h2>
-<table id="serviceStats" class="table">
+<table id="serviceStats" class="table table-hover align-middle">
     <thead>
         <tr>
             <th>Service</th>
-            <th>Total Cache Hit Bytes</th>
-            <th>Total Cache Miss Bytes</th>
+            <th class="text-end">Total Cache Hit</th>
+            <th class="text-end">Total Cache Miss</th>
+            <th class="text-end">Cache Hit Rate</th>
         </tr>
     </thead>
     <tbody>
         @{
-            var totalMissClients = serviceDownloadStats.Sum(t => t.TotalCacheMissBytes);
-            var totalHitClients = serviceDownloadStats.Sum(t => t.TotalCacheHitBytes);
-            var uberTotalClients = totalMissService + totalHitService;
             foreach (var stats in serviceDownloadStats.OrderByDescending(t => t.TotalCacheHitBytes))
             {
-                double cacheHitPercent = 0.0;
-                double cacheMissPercent = 0.0;
-                if ((stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0)
-                {
-                    cacheHitPercent = Math.Round(((double)stats.TotalCacheHitBytes / (uberTotalClients)) * 100, 2);
-                    cacheMissPercent = Math.Round(((double)stats.TotalCacheMissBytes / (uberTotalClients)) * 100, 2);
-                }
+                double hitShare = serviceGrandTotal != 0 ? Math.Round(((double)stats.TotalCacheHitBytes / serviceGrandTotal) * 100, 2) : 0.0;
+                double missShare = serviceGrandTotal != 0 ? Math.Round(((double)stats.TotalCacheMissBytes / serviceGrandTotal) * 100, 2) : 0.0;
+                double hitRate = (stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0 ? Math.Round(((double)stats.TotalCacheHitBytes / (stats.TotalCacheMissBytes + stats.TotalCacheHitBytes)) * 100, 2) : 0.0;
                 <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
-                    <td>@stats.Identifier</td>
-                    <td>
-                        <progress max="100" value="@(cacheHitPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({cacheHitPercent}%)")
+                    <td class="text-nowrap">@stats.Identifier</td>
+                    <td class="text-end text-nowrap">
+                        <progress class="stat-hit" max="100" value="@(hitShare.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <span class="text-success">@($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({hitShare}%)")</span>
                     </td>
-                    <td>
-                        <progress max="100" value="@(cacheMissPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({cacheMissPercent}%)")
+                    <td class="text-end text-nowrap">
+                        <progress class="stat-miss" max="100" value="@(missShare.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <span class="text-danger">@($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({missShare}%)")</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <progress class="stat-hit" max="100" value="@(hitRate.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <span>@hitRate%</span>
                     </td>
                 </tr>
             }
-            <tr>
+            var serviceHitRate = serviceGrandTotal != 0 ? Math.Round(((double)serviceTotalHit / serviceGrandTotal) * 100, 2) : 0.0;
+            <tr class="fw-bold">
                 <td>Total</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalHitClients)</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalMissClients)</td>
+                <td class="text-end">@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(serviceTotalHit)</td>
+                <td class="text-end">@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(serviceTotalMiss)</td>
+                <td class="text-end">@serviceHitRate%</td>
             </tr>
         }
 

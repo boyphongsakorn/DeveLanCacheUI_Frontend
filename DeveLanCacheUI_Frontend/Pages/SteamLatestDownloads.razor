@@ -25,15 +25,15 @@
     }
 </h1>
 
-<table class="table">
+<table class="table table-hover align-middle">
     <thead>
         <tr>
-            <th>Timestamp</th>
+            <th>Time</th>
             <th>App</th>
             <th>Depot</th>
             <th>Client</th>
-            <th>Cache Hit</th>
-            <th>Cache Miss</th>
+            <th class="text-end">Cache Hit</th>
+            <th class="text-end">Cache Miss</th>
             <th>Progress</th>
         </tr>
     </thead>
@@ -58,15 +58,16 @@
             var depotHref = downloadIdentifierString != null && downloadEvent.CacheIdentifier == "steam" ? $"https://steamdb.info/depot/{downloadIdentifierString}/" : null;
             var imgUrl = appId != 0 ? $"https://img.gs/fhcphvsghs/quality=low/https://steam-header-proxy.vercel.app/header?appid={appId}" : "";
             <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
-                <td>
-                     <LocalTime DateTime="downloadEvent.CreatedAt" /> - <LocalTime DateTime="downloadEvent.LastUpdatedAt" />
+                <td class="text-nowrap">
+                    <LocalTime DateTime="downloadEvent.CreatedAt" />
+                    <div class="text-body-secondary small">→ <LocalTime DateTime="downloadEvent.LastUpdatedAt" /></div>
                 </td>
                 <td>
                     @if (appId != 0)
                     {
-                        <a href="@appHref" target="_blank">
-                            <img src="@imgUrl" style="width:200px;height:auto;" />
-                            @*@(downloadEvent.SteamDepot?.SteamApp?.AppName ?? "unknown")*@
+                        <a href="@appHref" target="_blank" class="text-decoration-none">
+                            <img src="@imgUrl" style="width:160px;height:auto;" alt="@(downloadEvent.SteamDepot?.SteamApp?.name)" />
+                            <div class="fw-bold">@(downloadEvent.SteamDepot?.SteamApp?.name ?? "unknown")</div>
                         </a>
                     }
                     else
@@ -74,7 +75,7 @@
                         <span>@(downloadEvent.SteamDepot?.SteamApp?.name ?? "unknown")</span>
                     }
                 </td>
-                <td>
+                <td class="text-nowrap">
                     @if (depotHref != null)
                     {
                         <a href="@depotHref" target="_blank">
@@ -86,7 +87,7 @@
                         <span>@downloadEvent.DownloadIdentifierString</span>
                     }
                 </td>
-                <td style="text-align:center;">
+                <td class="text-nowrap" style="text-align:center;">
                     @if (backendBaseUrl != null && _localStorage.GetItem<bool>(LocalStorageField.HashImagesEnabled))
                     {
                         <div>@downloadEvent.ClientIp</div>
@@ -97,34 +98,35 @@
                         @downloadEvent.ClientIp
                     }
                 </td>
-                <td>
-                    <progress max="100" value="@(cacheHitPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                    @{
-                        //If I don't add this @{ } around it there's a random space
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(downloadEvent.CacheHitBytes)} ({cacheHitPercent}%)")
-                    }
+                <td class="text-end text-nowrap">
+                    <progress class="stat-hit" max="100" value="@(cacheHitPercent.ToString(CultureInfo.InvariantCulture))"></progress>
+                    <span class="text-success">@($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(downloadEvent.CacheHitBytes)} ({cacheHitPercent}%)")</span>
                 </td>
-                <td>
-                    <progress max="100" value="@(cacheMissPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                    @{
-                        //If I don't add this @{ } around it there's a random space
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(downloadEvent.CacheMissBytes)} ({cacheMissPercent}%)")
-                    }
+                <td class="text-end text-nowrap">
+                    <progress class="stat-miss" max="100" value="@(cacheMissPercent.ToString(CultureInfo.InvariantCulture))"></progress>
+                    <span class="text-danger">@($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(downloadEvent.CacheMissBytes)} ({cacheMissPercent}%)")</span>
                 </td>
-                <td>
+                <td class="text-nowrap">
                     @if (downloadEvent.TotalBytes != 0)
                     {
-                        <progress max="100" value="@(totalPercent.ToString(CultureInfo.InvariantCulture))"></progress>
+                        <progress class="stat-total" max="100" value="@(totalPercent.ToString(CultureInfo.InvariantCulture))"></progress>
 
                         var totalBytesString = DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString((long)downloadEvent.TotalBytes);
                         var downloadedBytesString = DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(downloadEvent.CacheMissBytes + downloadEvent.CacheHitBytes);
-                        var progressString = totalPercent < 100 ? $"{downloadedBytesString}/{totalBytesString} ({totalPercent}%)" : $"{downloadedBytesString} (100%)";
 
-                        @progressString
+                        @if (totalPercent >= 100)
+                        {
+                            <span class="badge text-bg-success me-1">Complete</span>
+                            <span>@totalBytesString</span>
+                        }
+                        else
+                        {
+                            @($"{downloadedBytesString}/{totalBytesString} ({totalPercent}%)")
+                        }
                     }
                     else
                     {
-                        <span>Could not find Steam Manifest</span>
+                        <span class="text-body-secondary">Could not find Steam Manifest</span>
                     }
                 </td>
             </tr>

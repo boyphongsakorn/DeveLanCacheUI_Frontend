@@ -31,6 +31,25 @@ progress {
     margin-right: 5px;
 }
 
+progress.stat-hit,
+progress.stat-miss,
+progress.stat-total {
+    width: 100px;
+    vertical-align: middle;
+}
+
+progress.stat-hit {
+    accent-color: #198754;
+}
+
+progress.stat-miss {
+    accent-color: #dc3545;
+}
+
+progress.stat-total {
+    accent-color: #0d6efd;
+}
+
 .hashimage {
     width: 100px;
     height: 100px;
